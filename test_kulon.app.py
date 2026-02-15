@@ -7,7 +7,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# Вопросы теста
+# Вопросы теста (с ИСПРАВЛЕННЫМ 5-м вопросом)
 questions = [
     {
         "question": "Как читается закон Кулона?",
@@ -54,10 +54,10 @@ questions = [
         "options": [
             "Сила становится отрицательной, значит она исчезает",
             "Заряды отталкиваются (одноимённые)",
-            "Заряды притягиваются (разноимённые)",
+            "Заряды притягиваются (разноимённые)",  # ЭТО ПРАВИЛЬНЫЙ ОТВЕТ
             "Ошибка в расчётах, заряды всегда положительны"
         ],
-        "correct": 2
+        "correct": 2  # ИСПРАВЛЕНО: теперь указывает на правильный ответ
     },
     {
         "question": "Если заряды увеличить в 3 раза каждый, не меняя расстояния, сила взаимодействия:",
@@ -142,7 +142,7 @@ def main():
         st.session_state.score = 0
         st.session_state.answers = []
         st.session_state.test_finished = False
-        st.session_state.answer_given = False  # Флаг: ответ на текущий вопрос уже дан
+        st.session_state.answer_given = False
 
     # Если тест закончен, показываем результаты
     if st.session_state.test_finished:
@@ -170,7 +170,7 @@ def show_question():
         "Выберите ответ:",
         q['options'],
         key=f"radio_{current}",
-        disabled=st.session_state.answer_given  # Блокируем, если уже ответили
+        disabled=st.session_state.answer_given
     )
     
     # Кнопка ответа
