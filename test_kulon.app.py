@@ -1,0 +1,303 @@
+import streamlit as st
+import time
+
+# Настройка страницы (должна быть первой командой streamlit)
+st.set_page_config(
+    page_title="Тест: Закон Кулона",
+    page_icon="⚡",
+    layout="centered"
+)
+
+# Вопросы теста (массив словарей)
+questions = [
+    {
+        "question": "Как читается закон Кулона?",
+        "options": [
+            "Сила пропорциональна произведению зарядов и обратно пропорциональна расстоянию",
+            "Сила пропорциональна произведению зарядов и обратно пропорциональна квадрату расстояния между ними",
+            "Сила пропорциональна сумме зарядов и прямо пропорциональна расстоянию",
+            "Сила пропорциональна квадрату зарядов и не зависит от расстояния"
+        ],
+        "correct": 1  # индекс правильного ответа (считаем с 0)
+    },
+    {
+        "question": "В каких единицах измеряется электрический заряд в СИ?",
+        "options": [
+            "Ампер (А)",
+            "Вольт (В)",
+            "Кулон (Кл)",
+            "Фарад (Ф)"
+        ],
+        "correct": 2
+    },
+    {
+        "question": "Коэффициент k в законе Кулона (в вакууме) приблизительно равен:",
+        "options": [
+            "1",
+            "9·10⁹ Н·м²/Кл²",
+            "8,85·10⁻¹² Кл²/(Н·м²)",
+            "6,67·10⁻¹¹ Н·м²/кг²"
+        ],
+        "correct": 1
+    },
+    {
+        "question": "Как изменится сила кулоновского взаимодействия двух точечных зарядов, если расстояние между ними увеличить в 2 раза?",
+        "options": [
+            "Увеличится в 2 раза",
+            "Уменьшится в 2 раза",
+            "Увеличится в 4 раза",
+            "Уменьшится в 4 раза"
+        ],
+        "correct": 3
+    },
+    {
+        "question": "Что означает знак «минус» в законе Кулона при подстановке зарядов?",
+        "options": [
+            "Сила становится отрицательной, значит она исчезает",
+            "Заряды отталкиваются (одноимённые)",
+            "Заряды притягиваются (разноимённые)",
+            "Ошибка в расчётах, заряды всегда положительны"
+        ],
+        "correct": 2
+    },
+    {
+        "question": "Если заряды увеличить в 3 раза каждый, не меняя расстояния, сила взаимодействия:",
+        "options": [
+            "Увеличится в 3 раза",
+            "Увеличится в 6 раз",
+            "Увеличится в 9 раз",
+            "Не изменится"
+        ],
+        "correct": 2
+    },
+    {
+        "question": "Закон Кулона справедлив для:",
+        "options": [
+            "Любых тел с любыми размерами",
+            "Только для неподвижных точечных зарядов",
+            "Только для движущихся зарядов",
+            "Для проводников с током"
+        ],
+        "correct": 1
+    },
+    {
+        "question": "Кто экспериментально установил закон взаимодействия зарядов?",
+        "options": [
+            "Исаак Ньютон",
+            "Алессандро Вольта",
+            "Шарль Кулон",
+            "Майкл Фарадей"
+        ],
+        "correct": 2
+    },
+    {
+        "question": "Диэлектрическая проницаемость среды ε в законе Кулона учитывается как:",
+        "options": [
+            "Увеличивает силу в ε раз",
+            "Уменьшает силу в ε раз",
+            "Не влияет на силу",
+            "Меняет знак силы"
+        ],
+        "correct": 1
+    },
+    {
+        "question": "Два заряда +q и -q находятся на расстоянии r. Куда направлена сила, действующая на отрицательный заряд со стороны положительного?",
+        "options": [
+            "От положительного заряда (отталкивание)",
+            "К положительному заряду (притяжение)",
+            "Перпендикулярно линии, соединяющей заряды",
+            "Сила равна нулю"
+        ],
+        "correct": 1
+    }
+]
+
+# Функция для сброса теста
+def reset_test():
+    st.session_state.q_index = 0
+    st.session_state.score = 0
+    st.session_state.answers = []
+    st.session_state.test_completed = False
+    st.session_state.show_feedback = False
+
+# Инициализация состояния сессии
+if 'q_index' not in st.session_state:
+    reset_test()
+
+# Заголовок с красивым оформлением
+st.markdown("""
+    <style>
+    .main-title {
+        text-align: center;
+        font-size: 3rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+    .sub-title {
+        text-align: center;
+        color: #666;
+        font-size: 1.2rem;
+        margin-top: 0;
+        margin-bottom: 2rem;
+    }
+    .stProgress > div > div > div > div {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+st.markdown('<p class="main-title">⚡ Закон Кулона ⚡</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">Проверь свои знания по электростатике</p>', unsafe_allow_html=True)
+
+# Основная логика теста
+total_questions = len(questions)
+
+if not st.session_state.test_completed:
+    # Прогресс-бар
+    progress = st.session_state.q_index / total_questions
+    st.progress(progress)
+    
+    # Счетчик вопросов
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.markdown(f"<h4 style='text-align: center;'>Вопрос {st.session_state.q_index + 1} из {total_questions}</h4>", 
+                   unsafe_allow_html=True)
+    
+    # Текущий вопрос
+    current_q = questions[st.session_state.q_index]
+    
+    # Карточка вопроса
+    with st.container():
+        st.markdown(f"""
+        <div style='background: #f8f9fa; padding: 25px; border-radius: 15px; margin: 20px 0;'>
+            <p style='font-size: 1.3rem; color: #333; font-weight: 600;'>{current_q['question']}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Варианты ответов
+        answer = st.radio(
+            "Выберите правильный ответ:",
+            current_q['options'],
+            key=f"q_{st.session_state.q_index}",
+            label_visibility="collapsed"
+        )
+        
+        # Кнопка ответа
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            if st.button("📝 Ответить", use_container_width=True, type="primary"):
+                # Проверяем ответ
+                correct_index = current_q['correct']
+                correct_answer = current_q['options'][correct_index]
+                
+                if answer == correct_answer:
+                    st.session_state.score += 1
+                    st.success("✅ Абсолютно верно!")
+                else:
+                    st.error(f"❌ Неправильно. Правильный ответ: **{correct_answer}**")
+                
+                # Запоминаем ответ
+                st.session_state.answers.append({
+                    'question': current_q['question'],
+                    'user_answer': answer,
+                    'correct_answer': correct_answer,
+                    'is_correct': answer == correct_answer
+                })
+                
+                # Переходим к следующему вопросу
+                st.session_state.q_index += 1
+                
+                # Проверяем, закончился ли тест
+                if st.session_state.q_index >= total_questions:
+                    st.session_state.test_completed = True
+                
+                # Обновляем страницу
+                st.rerun()
+    
+    # Кнопка сброса (маленькая в углу)
+    with st.sidebar:
+        st.markdown("### ⚙️ Управление")
+        if st.button("🔄 Начать заново", use_container_width=True):
+            reset_test()
+            st.rerun()
+        
+        st.markdown("---")
+        st.markdown("### 📊 Статистика")
+        st.markdown(f"**Правильных ответов:** {st.session_state.score}")
+        st.markdown(f"**Осталось вопросов:** {total_questions - st.session_state.q_index}")
+
+else:
+    # ТЕСТ ЗАКОНЧЕН - ПОКАЗЫВАЕМ РЕЗУЛЬТАТ
+    st.balloons()  # Праздничная анимация
+    
+    # Результаты
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.markdown(f"""
+        <div style='text-align: center; background: linear-gradient(135deg, #667eea20, #764ba220); 
+                    padding: 30px; border-radius: 20px; margin: 20px 0;'>
+            <h1 style='font-size: 4rem; margin: 0;'>{st.session_state.score}/{total_questions}</h1>
+            <p style='font-size: 2rem; margin: 0; color: #667eea;'>
+                {st.session_state.score/total_questions*100:.1f}%
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Вердикт
+    percentage = st.session_state.score / total_questions * 100
+    
+    if percentage == 100:
+        verdict = "🏆 **Превосходно!** Вы знаете закон Кулона на отлично!"
+        verdict_color = "#28a745"
+    elif percentage >= 80:
+        verdict = "🌟 **Отлично!** Очень хороший результат, но есть нюансы."
+        verdict_color = "#17a2b8"
+    elif percentage >= 60:
+        verdict = "📚 **Хорошо.** Стоит повторить некоторые моменты."
+        verdict_color = "#ffc107"
+    elif percentage >= 40:
+        verdict = "📖 **Удовлетворительно.** Рекомендуем изучить тему подробнее."
+        verdict_color = "#fd7e14"
+    else:
+        verdict = "📕 **Плохо.** Вам нужно серьезно разобраться в теме."
+        verdict_color = "#dc3545"
+    
+    st.markdown(f"""
+    <div style='text-align: center; padding: 20px; background: {verdict_color}20; 
+                border-radius: 15px; border-left: 5px solid {verdict_color}; margin: 20px 0;'>
+        <p style='font-size: 1.3rem; color: #333;'>{verdict}</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Детальный разбор ответов
+    with st.expander("📋 Посмотреть все ответы"):
+        for i, ans in enumerate(st.session_state.answers, 1):
+            if ans['is_correct']:
+                st.markdown(f"**{i}. {ans['question']}**  \n✅ Ваш ответ: **{ans['user_answer']}** (верно)")
+            else:
+                st.markdown(f"**{i}. {ans['question']}**  \n❌ Ваш ответ: {ans['user_answer']}  \n✓ Правильно: **{ans['correct_answer']}**")
+            st.markdown("---")
+    
+    # Кнопки действий
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("🔄 Пройти заново", use_container_width=True, type="primary"):
+            reset_test()
+            st.rerun()
+    with col2:
+        if st.button("📤 Поделиться результатом", use_container_width=True):
+            text = f"Я прошел тест по закону Кулона и набрал {st.session_state.score}/{total_questions} ({st.session_state.score/total_questions*100:.1f}%)! Попробуй и ты!"
+            st.code(text, language="text")
+            st.info("Скопируйте текст выше и отправьте друзьям!")
+
+# Подвал
+st.markdown("---")
+st.markdown("""
+<div style='text-align: center; color: #888; font-size: 0.9rem;'>
+    ⚡ Закон Кулона: F = k · |q₁|·|q₂| / r² ⚡
+</div>
+""", unsafe_allow_html=True)
